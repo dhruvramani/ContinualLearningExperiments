@@ -17,6 +17,14 @@ def cifar10(load=False):
     saver = tf.train.Saver()  
     sess = tf.InteractiveSession()
 
+    if(load):
+        ckpt = tf.train.get_checkpoint_state('./saved/')
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+        else:
+            print("No Checkpoint found, setting load to false")
+            load = False
+
     input_ph = tf.placeholder(dtype=tf.float32, shape=(16,50,400))   #(batch_size, time, input_dim)
     target_ph = tf.placeholder(dtype=tf.int32, shape=(16,50))     #(batch_size, time)(label_indices)
 
@@ -34,7 +42,7 @@ def cifar10(load=False):
     generator = CifarGenerator(data_folder='./data/cifar-10', batch_size=batch_size, nb_classes=nb_class, _class=which_class, nb_samples_per_class=nb_samples_per_class, max_iter=None)
     output_var, output_var_flatten, params = memory_augmented_neural_network(input_ph, target_ph, batch_size=batch_size, nb_class=nb_class, memory_shape=memory_shape, controller_size=controller_size, input_size=input_size, nb_reads=nb_reads)
 
-    print 'Compiling the Model'
+    print('Compiling the Model')
     
 
     with tf.variable_scope("Weights", reuse=True):
@@ -56,7 +64,7 @@ def cifar10(load=False):
     
     #output_var = tf.cast(output_var, tf.int32)
     target_ph_oh = tf.one_hot(target_ph, depth=generator.nb_samples)
-    print 'Output, Target shapes: ',output_var.get_shape().as_list(), target_ph_oh.get_shape().as_list()
+    print('Output, Target shapes: ', output_var.get_shape().as_list(), target_ph_oh.get_shape().as_list())
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=output_var, labels=target_ph_oh), name="cost")
     opt = tf.train.AdamOptimizer(learning_rate=1e-3)
     train_step = opt.minimize(cost, var_list=params)
@@ -65,7 +73,7 @@ def cifar10(load=False):
     accuracies = accuracy_instance(tf.argmax(output_var, axis=2), target_ph, batch_size=generator.batch_size)
     sum_out = tf.reduce_sum(tf.reshape(tf.one_hot(tf.argmax(output_var, axis=2), depth=generator.nb_samples), (-1, generator.nb_samples)), axis=0)
 
-    print 'Done'
+    print('Done')
 
     tf.summary.scalar('cost', cost)
     for i in range(generator.nb_samples_per_class):
@@ -79,9 +87,10 @@ def cifar10(load=False):
     all_scores, scores, accs = [],[],np.zeros(generator.nb_samples_per_class)
 
 
-    sess.run(tf.global_variables_initializer())
+    if(!load):
+        sess.run(tf.global_variables_initializer())
 
-    print 'Training the model'
+    print('Training the model')
 
     try:
         for i, (batch_input, batch_output) in generator:
@@ -89,14 +98,14 @@ def cifar10(load=False):
                 input_ph: batch_input,
                 target_ph: batch_output
             }
-            #print batch_input.shape, batch_output.shape
+            #print(batch_input.shape, batch_output.shape)
             train_step.run(feed_dict)
             score = cost.eval(feed_dict)
             acc = accuracies.eval(feed_dict)
             temp = sum_out.eval(feed_dict)
             summary = merged.eval(feed_dict)
             train_writer.add_summary(summary, i)
-            print i, ' ',temp
+            print(i, ' ', temp)
             all_scores.append(score)
             scores.append(score)
             accs += acc
@@ -104,11 +113,11 @@ def cifar10(load=False):
                 print(accs / 100.0)
                 print('Episode %05d: %.6f' % (i, np.mean(score)))
                 scores, accs = [], np.zeros(generator.nb_samples_per_class)
-                aver.save(sess, './saved/model.ckpt', global_step=i+1)
+                saver.save(sess, './saved/model.ckpt', global_step=i+1)
 
 
     except KeyboardInterrupt:
-        print time.time() - t0
+        print(time.time() - t0)
         pass
 
 if __name__ == '__main__':
