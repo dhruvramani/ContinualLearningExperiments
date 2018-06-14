@@ -35,8 +35,8 @@ def cifar10(load=False):
     which_class = 0
     nb_samples_per_class = 10
 
-    input_ph = tf.placeholder(dtype=tf.float32, shape=(batch_size, nb_samples_per_class, input_size))   #(batch_size, time, input_dim)
-    target_ph = tf.placeholder(dtype=tf.int32, shape=(batch_size, nb_samples_per_class))     #(batch_size, time)(label_indices)
+    input_ph = tf.placeholder(dtype=tf.float32, shape=(batch_size, nb_class * nb_samples_per_class, input_size))   #(batch_size, time, input_dim)
+    target_ph = tf.placeholder(dtype=tf.int32, shape=(batch_size, nb_class * nb_samples_per_class))     #(batch_size, time)(label_indices)
 
     #Load Data
     generator = CifarGenerator(data_folder='./data/cifar-10', batch_size=batch_size, nb_classes=nb_class, _class=which_class, nb_samples_per_class=nb_samples_per_class, max_iter=None)
