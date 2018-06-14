@@ -14,6 +14,7 @@ from MANN.Utils.tf_utils import update_tensor
 
 def cifar10(load=False):
 
+    saver = tf.train.Saver()  
     sess = tf.InteractiveSession()
 
     input_ph = tf.placeholder(dtype=tf.float32, shape=(16,50,400))   #(batch_size, time, input_dim)
@@ -103,6 +104,7 @@ def cifar10(load=False):
                 print(accs / 100.0)
                 print('Episode %05d: %.6f' % (i, np.mean(score)))
                 scores, accs = [], np.zeros(generator.nb_samples_per_class)
+                aver.save(sess, './saved/model.ckpt', global_step=i+1)
 
 
     except KeyboardInterrupt:
