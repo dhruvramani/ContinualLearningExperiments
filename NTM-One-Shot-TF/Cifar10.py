@@ -25,9 +25,6 @@ def cifar10(load=False):
             print("No Checkpoint found, setting load to false")
             load = False
 
-    input_ph = tf.placeholder(dtype=tf.float32, shape=(16,50,400))   #(batch_size, time, input_dim)
-    target_ph = tf.placeholder(dtype=tf.int32, shape=(16,50))     #(batch_size, time)(label_indices)
-
     ##Global variables for cifar10 Problem
     nb_reads = 4
     controller_size = 200
@@ -37,6 +34,9 @@ def cifar10(load=False):
     batch_size = 16
     which_class = 0
     nb_samples_per_class = 10
+
+    input_ph = tf.placeholder(dtype=tf.float32, shape=(batch_size, nb_samples_per_class, input_size))   #(batch_size, time, input_dim)
+    target_ph = tf.placeholder(dtype=tf.int32, shape=(batch_size, nb_samples_per_class))     #(batch_size, time)(label_indices)
 
     #Load Data
     generator = CifarGenerator(data_folder='./data/cifar-10', batch_size=batch_size, nb_classes=nb_class, _class=which_class, nb_samples_per_class=nb_samples_per_class, max_iter=None)
@@ -63,7 +63,7 @@ def cifar10(load=False):
     params = [W_key, b_key, W_add, b_add, W_sigma, b_sigma, W_xh, W_rh, W_hh, b_h, W_o, b_o]
     
     #output_var = tf.cast(output_var, tf.int32)
-    target_ph_oh = tf.one_hot(target_ph, depth=generator.nb_samples)
+    target_ph_oh = tf.one_hot(target_ph, depth=generator.nb_classes)
     print('Output, Target shapes: ', output_var.get_shape().as_list(), target_ph_oh.get_shape().as_list())
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=output_var, labels=target_ph_oh), name="cost")
     opt = tf.train.AdamOptimizer(learning_rate=1e-3)
@@ -71,7 +71,7 @@ def cifar10(load=False):
 
     #train_step = tf.train.AdamOptimizer(1e-3).minimize(cost)
     accuracies = accuracy_instance(tf.argmax(output_var, axis=2), target_ph, batch_size=generator.batch_size)
-    sum_out = tf.reduce_sum(tf.reshape(tf.one_hot(tf.argmax(output_var, axis=2), depth=generator.nb_samples), (-1, generator.nb_samples)), axis=0)
+    sum_out = tf.reduce_sum(tf.reshape(tf.one_hot(tf.argmax(output_var, axis=2), depth=generator.nb_classes), (-1, generator.nb_samples)), axis=0)
 
     print('Done')
 
