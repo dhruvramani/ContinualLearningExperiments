@@ -12,8 +12,10 @@ from MANN.Utils.tf_utils import update_tensor
 
 # IMP : To train on previously loaded model, set load=True below
 
-def cifar10(load=False):
+def cifar10(load=False, class_to_train=0):
 
+    if(class_to_train == 0):
+        load = False
     saver = tf.train.Saver()  
     sess = tf.InteractiveSession()
 
@@ -32,14 +34,15 @@ def cifar10(load=False):
     nb_class = 1
     input_size = 32*32*3
     batch_size = 16
-    which_class = 0
+    which_class = class_to_train
+    class_to_plot = 0
     nb_samples_per_class = 10
 
     input_ph = tf.placeholder(dtype=tf.float32, shape=(batch_size, nb_class * nb_samples_per_class, input_size))   #(batch_size, time, input_dim)
     target_ph = tf.placeholder(dtype=tf.int32, shape=(batch_size, nb_class * nb_samples_per_class))     #(batch_size, time)(label_indices)
 
     #Load Data
-    generator = CifarGenerator(data_folder='./data/cifar-10', batch_size=batch_size, nb_classes=nb_class, _class=which_class, nb_samples_per_class=nb_samples_per_class, max_iter=None)
+    generator = CifarGenerator(data_folder='./data/cifar-10', batch_size=batch_size, nb_classes=nb_class, _class=which_class, nb_samples_per_class=nb_samples_per_class, max_iter=500)
     output_var, output_var_flatten, params = memory_augmented_neural_network(input_ph, target_ph, batch_size=batch_size, nb_class=nb_class, memory_shape=memory_shape, controller_size=controller_size, input_size=input_size, nb_reads=nb_reads)
 
     print('Compiling the Model')
@@ -98,19 +101,28 @@ def cifar10(load=False):
                 input_ph: batch_input,
                 target_ph: batch_output
             }
+
             #print(batch_input.shape, batch_output.shape)
             train_step.run(feed_dict)
             score = cost.eval(feed_dict)
-            acc = accuracies.eval(feed_dict)
             temp = sum_out.eval(feed_dict)
             summary = merged.eval(feed_dict)
             train_writer.add_summary(summary, i)
             print(i, ' ', temp)
             all_scores.append(score)
             scores.append(score)
-            accs += acc
+
+            test_gen = CifarGenerator(data_folder='./data/cifar-10', batch_size=batch_size, nb_classes=nb_class, _class=class_to_plot, nb_samples_per_class=nb_samples_per_class, max_iter=100)
+
+            for j, (test_input, test_output) in test_gen :
+                test_dict = { input_ph: test_input, target_ph: test_output }
+                acc = accuracies.eval(test_dict)
+                accs += acc
+
+            accs /= 100.0
+
             if i>0 and not (i%100):
-                print(accs / 100.0)
+                print("Test Accuracy (class 0) : {}".format(accs / 100.0))
                 print('Episode %05d: %.6f' % (i, np.mean(score)))
                 scores, accs = [], np.zeros(generator.nb_samples_per_class)
                 saver.save(sess, './saved/model.ckpt', global_step=i+1)
@@ -121,4 +133,5 @@ def cifar10(load=False):
         pass
 
 if __name__ == '__main__':
-    cifar10()
+    for i in range(10):
+        cifar10(load=True, class_to_train=i)
