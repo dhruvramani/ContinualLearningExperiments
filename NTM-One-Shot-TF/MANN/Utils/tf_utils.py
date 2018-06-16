@@ -10,7 +10,7 @@ def update_tensor(V, dim2, val):  # Update tensor V, with index(:,dim2[:]) by va
     print('Shapes Recieved in Update: V, dim, val are ==> ',V.get_shape().as_list(), dim2.get_shape().as_list(), val.get_shape().as_list())
     val = tf.cast(val, V.dtype)
 
-    def body(_, (v, d2, chg)):
+    def body(_, v, d2, chg):
         print('Shapes Recieved in Body of Update: v, d2, chg are ==> ', v.get_shape().as_list(), d2.get_shape().as_list(), chg.get_shape().as_list())
         d2_int = tf.cast(d2, tf.int32)
         if len(chg.get_shape().as_list()) == 0:
