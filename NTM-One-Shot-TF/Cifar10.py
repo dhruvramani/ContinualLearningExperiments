@@ -17,9 +17,7 @@ def cifar10(load=False, class_to_train=0):
     if(class_to_train == 0):
         load = False
 
-    if(not load):
-        tf.reset_default_graph()
-
+    tf.reset_default_graph()
     sess = tf.InteractiveSession()
 
 
