@@ -16,6 +16,10 @@ def cifar10(load=False, class_to_train=0):
 
     if(class_to_train == 0):
         load = False
+
+    if(not load):
+        tf.reset_default_graph()
+
     sess = tf.InteractiveSession()
 
 
@@ -76,7 +80,7 @@ def cifar10(load=False, class_to_train=0):
     
     merged = tf.summary.merge_all()
     #writer = tf.summary.FileWriter('/tmp/tensorflow', graph=tf.get_default_graph())
-    train_writer = tf.summary.FileWriter('/tmp/tensorflow/', sess.graph)
+    train_writer = tf.summary.FileWriter('./tmp/tensorflow/', sess.graph)
 
     t0 = time.time()
     all_scores, scores, accs = [],[],np.zeros(generator.nb_samples_per_class)
@@ -101,7 +105,7 @@ def cifar10(load=False, class_to_train=0):
 
             if(batch_input.shape[0] == batch_size):
                 break
-                
+
             feed_dict = {
                 input_ph: batch_input,
                 target_ph: batch_output
