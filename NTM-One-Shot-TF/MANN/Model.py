@@ -30,7 +30,7 @@ def memory_augmented_neural_network(input_var, target_var, \
 
 
     with tf.variable_scope("Weights"):
-    	shape, high = shape_high((nb_reads, controller_size, memory_shape[1]))
+        shape, high = shape_high((nb_reads, controller_size, memory_shape[1]))
         W_key = tf.get_variable('W_key', shape=shape,initializer=tf.random_uniform_initializer(-1*high, high))
         b_key = tf.get_variable('b_key', shape=(nb_reads, memory_shape[1]),initializer=tf.constant_initializer(0))
         shape, high = shape_high((nb_reads, controller_size, memory_shape[1]))
