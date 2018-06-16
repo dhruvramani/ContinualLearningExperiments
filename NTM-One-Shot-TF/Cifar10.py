@@ -16,16 +16,8 @@ def cifar10(load=False, class_to_train=0):
 
     if(class_to_train == 0):
         load = False
-    saver = tf.train.Saver()  
     sess = tf.InteractiveSession()
 
-    if(load):
-        ckpt = tf.train.get_checkpoint_state('./saved/')
-        if ckpt and ckpt.model_checkpoint_path:
-            saver.restore(sess, ckpt.model_checkpoint_path)
-        else:
-            print("No Checkpoint found, setting load to false")
-            load = False
 
     ##Global variables for cifar10 Problem
     nb_reads = 4
@@ -89,6 +81,15 @@ def cifar10(load=False, class_to_train=0):
     t0 = time.time()
     all_scores, scores, accs = [],[],np.zeros(generator.nb_samples_per_class)
 
+    saver = tf.train.Saver()  
+
+    if(load):
+        ckpt = tf.train.get_checkpoint_state('./saved/')
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+        else:
+            print("No Checkpoint found, setting load to false")
+            load = False
 
     if(not load):
         sess.run(tf.global_variables_initializer())
