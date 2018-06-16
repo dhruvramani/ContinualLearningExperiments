@@ -90,7 +90,7 @@ def cifar10(load=False, class_to_train=0):
     all_scores, scores, accs = [],[],np.zeros(generator.nb_samples_per_class)
 
 
-    if(!load):
+    if(not load):
         sess.run(tf.global_variables_initializer())
 
     print('Training the model')
