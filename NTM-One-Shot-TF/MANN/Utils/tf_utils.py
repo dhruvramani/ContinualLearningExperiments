@@ -7,7 +7,7 @@ def shared_float32(x, name=''):
 
 
 def update_tensor(V, dim2, val):  # Update tensor V, with index(:,dim2[:]) by val[:]
-    print 'Shapes Recieved in Update: V, dim, val are ==> ',V.get_shape().as_list(), dim2.get_shape().as_list(), val.get_shape().as_list())
+    print('Shapes Recieved in Update: V, dim, val are ==> ',V.get_shape().as_list(), dim2.get_shape().as_list(), val.get_shape().as_list())
     val = tf.cast(val, V.dtype)
 
     def body(_, (v, d2, chg)):
