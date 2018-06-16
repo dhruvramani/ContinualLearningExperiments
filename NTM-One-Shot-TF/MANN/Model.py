@@ -22,11 +22,13 @@ def memory_augmented_neural_network(input_var, target_var, \
     
     def shape_high(shape):
     	shape = np.array(shape)
+
     	if isinstance(shape, int):
             high = np.sqrt(6. / shape)
     	else:
             high = np.sqrt(6. / (np.sum(shape[:2]) * np.prod(shape[2:])))
-        return (list(shape),high)
+
+        return (list(shape), high)
 
     with tf.variable_scope("Weights"):
     	shape, high = shape_high((nb_reads, controller_size, memory_shape[1]))
