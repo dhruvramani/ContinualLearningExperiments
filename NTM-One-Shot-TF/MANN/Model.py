@@ -105,7 +105,7 @@ def memory_augmented_neural_network(input_var, target_var, \
         ww_t = tf.reshape(ww_t,(batch_size, nb_reads, memory_shape[0]))
 
         with tf.variable_scope("M_t"):
-            print 'wlu_tm1 : ', wlu_tm1.get_shape().as_list()
+            print('wlu_tm1 : ', wlu_tm1.get_shape().as_list())
             M_t = update_tensor(M_tm1, wlu_tm1[:,0], tf.constant(0., shape=[batch_size, memory_shape[1]]))      #Update tensor done using sparse to dense
         M_t = tf.add(M_t, tf.matmul(tf.transpose(ww_t, perm=[0,2,1]   ), a_t))   #(batch_size, memory_size[0], memory_size[1])
         K_t = cosine_similarity(k_t, M_t)
