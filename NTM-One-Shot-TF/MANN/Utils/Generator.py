@@ -84,7 +84,7 @@ class CifarGenerator(object):
 
     def load_images(self):
         with open(self.file_name, 'rb') as file:
-            unpickler = pickle._Unpickler(file)
+            unpickler = pickle.Unpickler(file)
             unpickler.encoding = 'latin1'
             contents = unpickler.load()
             self.full_data_images, self.full_data_labels = np.asarray(contents['data'], dtype=np.float32), np.asarray(contents['labels'])
