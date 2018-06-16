@@ -98,6 +98,10 @@ def cifar10(load=False, class_to_train=0):
 
     try:
         for i, (batch_input, batch_output) in generator:
+
+            if(batch_input.shape[0] == batch_size):
+                break
+                
             feed_dict = {
                 input_ph: batch_input,
                 target_ph: batch_output
