@@ -56,7 +56,7 @@ def memory_augmented_neural_network(input_var, target_var, \
         return [x[:,n*size:(n+1)*size] for n in range(nb_slice)]
 
 
-    def step(M_tm1, c_tm1, h_tm1, r_tm1, wr_tm1, wu_tm1, x_t):
+    def step((M_tm1, c_tm1, h_tm1, r_tm1, wr_tm1, wu_tm1), (x_t)):
 
         with tf.variable_scope("Weights", reuse=True):
             W_key = tf.get_variable('W_key', shape=(nb_reads, controller_size, memory_shape[1]))
