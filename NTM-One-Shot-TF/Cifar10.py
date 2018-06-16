@@ -66,7 +66,7 @@ def cifar10(load=False, class_to_train=0):
 
     #train_step = tf.train.AdamOptimizer(1e-3).minimize(cost)
     accuracies = accuracy_instance(tf.argmax(output_var, axis=2), target_ph, batch_size=generator.batch_size)
-    sum_out = tf.reduce_sum(tf.reshape(tf.one_hot(tf.argmax(output_var, axis=2), depth=generator.nb_classes), (-1, generator.nb_samples)), axis=0)
+    sum_out = tf.reduce_sum(tf.reshape(tf.one_hot(tf.argmax(output_var, axis=2), depth=generator.nb_classes), (-1, generator.nb_classes)), axis=0)
 
     print('Done')
 
