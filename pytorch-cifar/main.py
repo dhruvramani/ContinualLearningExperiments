@@ -2,9 +2,12 @@
 from __future__ import print_function
 
 import torch
+import pickle
+import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from torch.autograd import Variable
 import torch.backends.cudnn as cudnn
 
 import torchvision
@@ -48,7 +51,7 @@ testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True
 testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-classes_to_train = [0]
+filepath = "./embedding/class_"
 
 # Model
 print('==> Building model..')
@@ -78,31 +81,94 @@ if args.resume:
     start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-
 # Training
-def train(epoch):
+def train(epoch, curr_class, old_classes):
     print('\nEpoch: %d' % epoch)
     net.train()
-    train_loss = 0
-    correct = 0
-    correct_zero = 0
-    total = 0
+    train_loss, loss_zero = 0, 0
+    correct, correct_zero = 0, 0
+    total, total_zero     = 0, 0
+
+    if(len(old_classes) == 0):
+        params = net.parameters()
+    else :
+        params = list(net.layer4.parameters()) + list(net.linear.parameters())
+    
+    optimizer = optim.SGD(params, lr=args.lr, momentum=0.9, weight_decay=5e-4)
+
+    for old_class in old_classes:
+        with open(filename + str(old_class) + ".pkl", 'rb') as file:
+            unpickler = pickle._Unpickler(file)
+            unpickler.encoding = 'latin1'
+            contents = unpickler.load()
+            
+            X, Y = np.asarray(contents['data'], dtype=np.float32), np.asarray(contents['labels'])
+            X, Y = Variable(torch.from_numpy(X), requires_grad=False), Variable(torch.from_numpy(Y), requires_grad=False)
+
+            optimizer.zero_grad()
+            outputs = net(X, old_class=True)
+            loss = criterion(outputs, Y)
+            loss.backward()
+            optimizer.step()
+
+            if(old_class == 0):
+                loss_zero += loss.item()
+                total_zero += Y.size(0)
+                _, predicted = outputs.max(1)
+                correct_zero += predicted.eq(Y).sum().item()
+
+                with open("./logs/train_zero_loss.log", "a+") as lfile:
+                    lfile.write(str(loss_zero / total_zero))
+                    lfile.write("\n")
+
+                with open("./logs/train_zero_acc.log", "a+") as afile:
+                    afile.write(str(correct_zero / total_zero))
+                    afile.write("\n")
+
+    print("Previous classes trained again.")
+
+    contents = dict()
+
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets = inputs.numpy(), targets.numpy()
+        idx = np.where(targets == curr_class)
+        inputs, targets = inputs[idx], targets[idx]
+        np_targets = targets
+        inputs, targets = Variable(torch.from_numpy(inputs), requires_grad=False), Variable(torch.from_numpy(targets), requires_grad=False)
+
         optimizer.zero_grad()
-        outputs = net(inputs)
+        activs, outputs = net(inputs, old_class=False)
+        activs = activs.data.numpy()
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
+
+        if('data' in contents.keys()):
+            contents['data'] = np.concatenate(contents['data'], activs)
+            contents['labels'] = np.concatenate(contents['labels'], np_targets)
+        else :
+            contents['data'] = activs
+            contents['labels'] = np_targets
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-            % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+         with open("./logs/train_curr_loss.log", "a+") as lfile:
+            lfile.write("{} : {}".format(curr_class, train_loss / total))
+            lfile.write("\n")
+
+        with open("./logs/train_curr_acc.log", "a+") as afile:
+            afile.write("{} : {}".format(curr_class, correct / total))
+            afile.write("\n")
+
+        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+
+    with open(filename + str(curr_class) + ".pkl", "wb+") as file:
+        pickle.dump(contents, file, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 def test(epoch):
     global best_acc
@@ -111,6 +177,7 @@ def test(epoch):
     correct = 0
     total = 0
     with torch.no_grad():
+
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
@@ -120,6 +187,14 @@ def test(epoch):
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
+
+             with open("./logs/test_loss.log", "a+") as lfile:
+                lfile.write(str(curr_class, train_loss / total))
+                lfile.write("\n")
+
+            with open("./logs/test_acc.log", "a+") as afile:
+                afile.write(str(correct / total))
+                afile.write("\n")
 
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                 % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
@@ -139,6 +214,8 @@ def test(epoch):
         best_acc = acc
 
 
-for epoch in range(start_epoch, start_epoch+200):
-    train(epoch)
-    test(epoch)
+for i in range(10):
+    old_classes_arr = [j for j in range(i)]
+    for epoch in range(start_epoch, start_epoch+200):
+        train(epoch, i, old_classes_arr)
+        test(epoch)
