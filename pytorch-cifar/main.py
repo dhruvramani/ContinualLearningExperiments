@@ -188,7 +188,7 @@ def test(epoch):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-             with open("./logs/test_loss.log", "a+") as lfile:
+            with open("./logs/test_loss.log", "a+") as lfile:
                 lfile.write(str(curr_class, train_loss / total))
                 lfile.write("\n")
 
