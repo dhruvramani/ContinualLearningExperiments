@@ -156,7 +156,7 @@ def train(epoch, curr_class, old_classes):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-         with open("./logs/train_curr_loss.log", "a+") as lfile:
+        with open("./logs/train_curr_loss.log", "a+") as lfile:
             lfile.write("{} : {}".format(curr_class, train_loss / total))
             lfile.write("\n")
 
