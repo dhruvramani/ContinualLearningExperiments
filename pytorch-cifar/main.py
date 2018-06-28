@@ -179,6 +179,7 @@ def test(epoch):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
+            print(outputs, targets)
             loss = criterion(outputs, targets)
 
             test_loss += loss.item()
@@ -215,5 +216,5 @@ def test(epoch):
 for i in range(10):
     old_classes_arr = [j for j in range(i)]
     for epoch in range(start_epoch, start_epoch+200):
-        train(epoch, i, old_classes_arr)
+        #train(epoch, i, old_classes_arr)
         test(epoch)
