@@ -156,13 +156,11 @@ def train(epoch, curr_class, old_classes):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        with open("./logs/train_curr_loss.log", "a+") as lfile:
-            lfile.write("{} : {}".format(curr_class, train_loss / total))
-            lfile.write("\n")
+        with open("./logs/train_loss_{}.log".format(curr_class), "a+") as lfile:
+            lfile.write("{}\n".format(train_loss / total))
 
-        with open("./logs/train_curr_acc.log", "a+") as afile:
-            afile.write("{} : {}".format(curr_class, correct / total))
-            afile.write("\n")
+        with open("./logs/train_acc.log".format(curr_class), "a+") as afile:
+            afile.write("{}\n".format(correct / total))
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
