@@ -168,7 +168,7 @@ def train(epoch, curr_class, old_classes):
         pickle.dump(contents, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def test(epoch):
+def test(epoch, curr_class):
     global best_acc
     net.eval()
     test_loss = 0
@@ -186,11 +186,11 @@ def test(epoch):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            with open("./logs/test_loss.log", "a+") as lfile:
-                lfile.write(str(curr_class, train_loss / total))
+            with open("./logs/test_loss_{}.log".format(curr_class), "a+") as lfile:
+                lfile.write(str(test_loss / total))
                 lfile.write("\n")
 
-            with open("./logs/test_acc.log", "a+") as afile:
+            with open("./logs/test_acc_{}.log".format(curr_class), "a+") as afile:
                 afile.write(str(correct / total))
                 afile.write("\n")
 
@@ -216,4 +216,4 @@ for i in range(10):
     old_classes_arr = [j for j in range(i)]
     for epoch in range(start_epoch, start_epoch+200):
         #train(epoch, i, old_classes_arr)
-        test(epoch)
+        test(epoch, i)
