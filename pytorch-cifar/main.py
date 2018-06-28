@@ -178,7 +178,7 @@ def test(epoch):
 
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs, old_class=True)
+            _, outputs = net(inputs, old_class=False)
             loss = criterion(outputs, targets)
 
             test_loss += loss.item()
