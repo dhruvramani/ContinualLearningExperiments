@@ -215,5 +215,5 @@ def test(epoch, curr_class):
 for i in range(10):
     old_classes_arr = [j for j in range(i)]
     for epoch in range(start_epoch, start_epoch+200):
-        #train(epoch, i, old_classes_arr)
+        train(epoch, i, old_classes_arr)
         test(epoch, i)
