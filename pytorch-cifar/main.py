@@ -144,6 +144,7 @@ def train(epoch, curr_class, old_classes):
         loss.backward()
         optimizer.step()
 
+        print(activs.shape, np_targets.shape)
         if('data' in contents.keys()):
             contents['data'] = np.concatenate(contents['data'], activs)
             contents['labels'] = np.concatenate(contents['labels'], np_targets)
