@@ -97,7 +97,7 @@ def train(epoch, curr_class, old_classes):
     optimizer = optim.SGD(params, lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     for old_class in old_classes:
-        with open(filename + str(old_class) + ".pkl", 'rb') as file:
+        with open(filepath + str(old_class) + ".pkl", 'rb') as file:
             unpickler = pickle._Unpickler(file)
             unpickler.encoding = 'latin1'
             contents = unpickler.load()
@@ -166,7 +166,7 @@ def train(epoch, curr_class, old_classes):
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-    with open(filename + str(curr_class) + ".pkl", "wb+") as file:
+    with open(filepath + str(curr_class) + ".pkl", "wb+") as file:
         pickle.dump(contents, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
