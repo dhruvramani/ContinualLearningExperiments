@@ -16,7 +16,7 @@ import torchvision.transforms as transforms
 import os
 import argparse
 
-from models.resnet import ResNet18
+from models.resnetlin import ResNet18
 from utils import progress_bar
 
 
@@ -106,10 +106,15 @@ def train(epoch, curr_class, old_classes):
         X, Y = Variable(torch.from_numpy(X), requires_grad=False), Variable(torch.from_numpy(Y), requires_grad=False)
 
         optimizer.zero_grad()
-        outputs = net(X, old_class=True)
+        outputs, linact = net(X, old_class=True)
+        linact = linact.data.numpy()
         loss = criterion(outputs, Y)
         loss.backward()
         optimizer.step()
+
+        if(epoch - start_epoch == 199):
+            with open("./activs/linear_{}_{}.pkl".format(curr_class, old_class), "wb+") as file:
+                pickle.dump(linact, file, protocol=pickle.HIGHEST_PROTOCOL)
 
         if(old_class == 0):
             loss_zero += loss.item()
@@ -138,7 +143,7 @@ def train(epoch, curr_class, old_classes):
         inputs, targets = Variable(torch.from_numpy(inputs), requires_grad=False), Variable(torch.from_numpy(targets), requires_grad=False)
 
         optimizer.zero_grad()
-        activs, outputs = net(inputs, old_class=False)
+        activs, outputs, linact = net(inputs, old_class=False)
         activs = activs.data.numpy()
         loss = criterion(outputs, targets)
         loss.backward()
@@ -178,7 +183,7 @@ def test(epoch, curr_class):
 
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            _, outputs = net(inputs, old_class=False)
+            _, outputs, _ = net(inputs, old_class=False)
             loss = criterion(outputs, targets)
 
             test_loss += loss.item()
@@ -214,6 +219,6 @@ def test(epoch, curr_class):
 
 for i in range(10):
     old_classes_arr = [j for j in range(i)]
-    for epoch in range(start_epoch, start_epoch+1):
+    for epoch in range(start_epoch, start_epoch+200):
         train(epoch, i, old_classes_arr)
         test(epoch, i)
