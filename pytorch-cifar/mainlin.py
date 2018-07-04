@@ -130,7 +130,7 @@ def train(epoch, curr_class, old_classes):
                 afile.write(str(correct_zero / total_zero))
                 afile.write("\n")
 
-    print("Previous classes trained again.")
+    print("Trained for Previous Classes : {}".format(old_classes))
 
     contents = dict()
 
