@@ -135,12 +135,12 @@ def train(epoch, curr_class, old_classes):
     contents = dict()
 
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets = inputs.to(device), targets.to(device)
         inputs, targets = inputs.cpu().numpy(), targets.cpu().numpy()
         idx = np.where(targets == curr_class)
         inputs, targets = inputs[idx], targets[idx]
         np_targets = targets
         inputs, targets = Variable(torch.from_numpy(inputs), requires_grad=False), Variable(torch.from_numpy(targets), requires_grad=False)
+        inputs, targets = inputs.to(device), targets.to(device)
 
         optimizer.zero_grad()
         activs, outputs, linact = net(inputs, old_class=False)
