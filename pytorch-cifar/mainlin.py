@@ -107,7 +107,7 @@ def train(epoch, curr_class, old_classes):
 
         optimizer.zero_grad()
         outputs, linact = net(X, old_class=True)
-        linact = linact.data.numpy()
+        linact = linact.data.cpu().numpy()
         loss = criterion(outputs, Y)
         loss.backward()
         optimizer.step()
@@ -136,7 +136,7 @@ def train(epoch, curr_class, old_classes):
 
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
-        inputs, targets = inputs.numpy(), targets.numpy()
+        inputs, targets = inputs.cpu().numpy(), targets.cpu().numpy()
         idx = np.where(targets == curr_class)
         inputs, targets = inputs[idx], targets[idx]
         np_targets = targets
@@ -144,7 +144,7 @@ def train(epoch, curr_class, old_classes):
 
         optimizer.zero_grad()
         activs, outputs, linact = net(inputs, old_class=False)
-        activs = activs.data.numpy()
+        activs = activs.data.cpu().numpy()
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
