@@ -164,7 +164,7 @@ def train(epoch, curr_class, old_classes):
         with open("./logs/train_loss_{}.log".format(curr_class), "a+") as lfile:
             lfile.write("{}\n".format(train_loss / total))
 
-        with open("./logs/train_acc.log".format(curr_class), "a+") as afile:
+        with open("./logs/train_acc_{}.log".format(curr_class), "a+") as afile:
             afile.write("{}\n".format(correct / total))
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
@@ -182,7 +182,13 @@ def test(epoch, curr_class):
     with torch.no_grad():
 
         for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.cpu().numpy(), targets.cpu().numpy()
+            idx = np.where(targets == curr_class)
+            inputs, targets = inputs[idx], targets[idx]
+            np_targets = targets
+            inputs, targets = Variable(torch.from_numpy(inputs), requires_grad=False), Variable(torch.from_numpy(targets), requires_grad=False)
             inputs, targets = inputs.to(device), targets.to(device)
+
             _, outputs, _ = net(inputs, old_class=False)
             loss = criterion(outputs, targets)
 
