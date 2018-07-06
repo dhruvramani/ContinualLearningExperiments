@@ -92,7 +92,7 @@ def train(epoch, curr_class, old_classes):
     if(len(old_classes) == 0):
         params = net.parameters()
     else :
-        params = list(net.layer4.parameters()) + list(net.linear.parameters())
+        params = list(net.layer4.parameters()) + list(net.linear1.parameters()) + list(net.linear2.parameters())
     
     optimizer = optim.SGD(params, lr=args.lr, momentum=0.9, weight_decay=5e-4)
 

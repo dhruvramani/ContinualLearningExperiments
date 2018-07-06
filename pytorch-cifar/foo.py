@@ -21,5 +21,5 @@ x1 = Variable(torch.randn(50, 20), requires_grad=False)
 y1 = model(x1)
 #y2 = model(x2)
 
-print(y1.data.numpy())
+print(list(model.lin1.parameters()))
 #print(y2.data.numpy())
