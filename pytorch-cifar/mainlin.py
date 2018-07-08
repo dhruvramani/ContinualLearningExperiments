@@ -19,6 +19,11 @@ import argparse
 from models.resnetlin import ResNet18
 from utils import progress_bar
 
+if not os.path.isdir('logs'):
+    os.mkdir('logs')
+
+if not os.path.isdir('embedding'):
+    os.mkdir('embedding')
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -112,9 +117,8 @@ def train(epoch, curr_class, old_classes):
         loss.backward()
         optimizer.step()
 
-        if(epoch - start_epoch == 199):
-            with open("./activs/linear_{}_{}.pkl".format(curr_class, old_class), "wb+") as file:
-                pickle.dump(linact, file, protocol=pickle.HIGHEST_PROTOCOL)
+        with open("./activs/linear_{}_{}.pkl".format(curr_class, old_class), "wb+") as file:
+            pickle.dump(linact, file, protocol=pickle.HIGHEST_PROTOCOL)
 
         if(old_class == 0):
             loss_zero += loss.item()
@@ -173,29 +177,30 @@ def train(epoch, curr_class, old_classes):
         pickle.dump(contents, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def test(epoch, curr_class):
+def test(epoch, old_classes_arr, curr_class):
     global best_acc
     net.eval()
     test_loss = 0
     correct = 0
     total = 0
+    classes = old_classes_arr + [curr_class]
     with torch.no_grad():
-
         for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets = inputs.cpu().numpy(), targets.cpu().numpy()
-            idx = np.where(targets == curr_class)
-            inputs, targets = inputs[idx], targets[idx]
-            np_targets = targets
-            inputs, targets = Variable(torch.from_numpy(inputs), requires_grad=False), Variable(torch.from_numpy(targets), requires_grad=False)
-            inputs, targets = inputs.to(device), targets.to(device)
+            real_inp, real_targ = inputs, targets
+            for cu_class in classes:
+                inputs, targets = real_inp.cpu().numpy(), real_targ.cpu().numpy()
+                idx = np.where(targets == cu_class)
+                inputs, targets = inputs[idx], targets[idx]
+                inputs, targets = Variable(torch.from_numpy(inputs), requires_grad=False), Variable(torch.from_numpy(targets), requires_grad=False)
+                inputs, targets = inputs.to(device), targets.to(device)
 
-            _, outputs, _ = net(inputs, old_class=False)
-            loss = criterion(outputs, targets)
+                _, outputs, _ = net(inputs, old_class=False)
+                loss = criterion(outputs, targets)
 
-            test_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+                test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
 
             with open("./logs/test_loss_{}.log".format(curr_class), "a+") as lfile:
                 lfile.write(str(test_loss / total))
@@ -205,11 +210,10 @@ def test(epoch, curr_class):
                 afile.write(str(correct / total))
                 afile.write("\n")
 
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (test_loss/(batch_idx + 1), 100. * correct/total, correct, total))
 
     # Save checkpoint.
-    acc = 100.*correct/total
+    acc = 100. * correct/total
     if acc > best_acc:
         print('Saving..')
         state = {
@@ -222,9 +226,15 @@ def test(epoch, curr_class):
         torch.save(state, './checkpoint/ckpt.t7')
         best_acc = acc
 
+    return best_acc
+
 
 for i in range(10):
     old_classes_arr = [j for j in range(i)]
+    old_acc = 0
     for epoch in range(start_epoch, start_epoch+200):
         train(epoch, i, old_classes_arr)
-        test(epoch, i)
+        acc = test(epoch, old_classes_arr, i)
+        if(acc - old_acc <= 1):
+            break
+        old_acc = acc
