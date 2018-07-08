@@ -25,6 +25,9 @@ if not os.path.isdir('logs'):
 if not os.path.isdir('embedding'):
     os.mkdir('embedding')
 
+if not os.path.isdir('activs'):
+    os.mkdir('activs')
+
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
