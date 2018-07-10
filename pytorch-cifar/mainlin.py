@@ -238,7 +238,10 @@ for i in range(10):
     for epoch in range(start_epoch, start_epoch+200):
         train(epoch, i, old_classes_arr)
         acc = test(epoch, old_classes_arr, i)
-        if(acc - old_acc <= 1):
-            break
         old_acc = old_acc + (acc - old_acc) / count
+        if(int(count % 10) == 0):
+            if(acc - old_acc <= 1):
+                break
+            count = 0
+            old_acc = 0
         count += 1
