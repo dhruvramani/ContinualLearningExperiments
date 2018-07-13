@@ -28,7 +28,7 @@ print(list(model.lin1.parameters()))
 
 
 model = ResNet18()
-print(model.layer4.parameters())
+print(list(model.parameters()))
 model = torch.nn.DataParallel(model)
 
-print(model.parameters())
+print(list(model.parameters()))
