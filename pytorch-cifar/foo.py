@@ -28,7 +28,7 @@ print(list(model.lin1.parameters()))
 
 
 model = ResNet18()
-print(list(model.parameters()))
+old_param = list(model.parameters())
 model = torch.nn.DataParallel(model)
 
-print(list(model.parameters()))
+print(old_param == list(model.parameters()))
