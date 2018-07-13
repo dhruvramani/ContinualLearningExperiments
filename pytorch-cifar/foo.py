@@ -1,8 +1,9 @@
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
+from models.resnetlin import *
 
-class Model(torch.nn.Module):
+'''class Model(torch.nn.Module):
     def __init__(self):
         super(Model, self).__init__()
         self.lin1 = torch.nn.Linear(20, 10)
@@ -22,4 +23,12 @@ y1 = model(x1)
 #y2 = model(x2)
 
 print(list(model.lin1.parameters()))
-#print(y2.data.numpy())
+#print(y2.data.numpy())'''
+
+
+
+model = ResNet18()
+print(model.layer4.parameters())
+model = torch.nn.DataParallel(model)
+
+print(model.parameters())
