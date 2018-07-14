@@ -25,8 +25,6 @@ y1 = model(x1)
 print(list(model.lin1.parameters()))
 #print(y2.data.numpy())'''
 
-
-
 model = ResNet18()
 old_param = list(model.parameters())
 model = torch.nn.DataParallel(model)

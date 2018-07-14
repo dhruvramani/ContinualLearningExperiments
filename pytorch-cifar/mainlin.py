@@ -113,7 +113,8 @@ def train(epoch, curr_class, old_classes):
             
             X, Y = np.asarray(contents['data'], dtype=np.float32), np.asarray(contents['labels'])
         X, Y = Variable(torch.from_numpy(X), requires_grad=False), Variable(torch.from_numpy(Y), requires_grad=False)
-
+        X, Y = X.to(device), Y.to(device)
+        
         optimizer.zero_grad()
         outputs, linact = net(X, old_class=True)
         linact = linact.data.cpu().numpy()
