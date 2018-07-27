@@ -208,20 +208,25 @@ def test(epoch, old_classes_arr, curr_class):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             real_inp, real_targ = inputs, targets
+            to_passinp, to_passtargets = inputs, targets
+            
             for cu_class in classes:
                 inputs, targets = real_inp.cpu().numpy(), real_targ.cpu().numpy()
                 idx = np.where(targets == cu_class)
                 inputs, targets = inputs[idx], targets[idx]
-                inputs, targets = Variable(torch.from_numpy(inputs), requires_grad=False), Variable(torch.from_numpy(targets), requires_grad=False)
-                inputs, targets = inputs.to(device), targets.to(device)
+                to_passinp = np.concatenate((to_passinp, inputs))
+                to_passtargets = np.concatenate((to_passtargets, targets))
+            
+            to_passinp, to_passtargets = Variable(torch.from_numpy(to_passinp), requires_grad=False), Variable(torch.from_numpy(to_passtargets), requires_grad=False)
+            to_passinp, to_passtargets = to_passinp.to(device), to_passtargets.to(device)
 
-                _, outputs, _ = net(inputs, old_class=False)
-                loss = criterion(outputs, targets)
+            _, outputs, _ = net(inputs, old_class=False)
+            loss = criterion(outputs, to_passtargets)
 
-                test_loss += loss.item()
-                _, predicted = outputs.max(1)
-                total += targets.size(0)
-                correct += predicted.eq(targets).sum().item()
+            test_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += to_passtargets.size(0)
+            correct += predicted.eq(to_passtargets).sum().item()
 
             with open("./logs/test_loss_{}.log".format(curr_class), "a+") as lfile:
                 lfile.write(str(test_loss / total))
