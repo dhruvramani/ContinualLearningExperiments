@@ -105,7 +105,8 @@ def train(epoch, curr_class, old_classes):
     
     optimizer = optim.SGD(params, lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
-    for old_class in old_classes:
+
+'''    for old_class in old_classes:
         with open(filepath + str(old_class) + ".pkl", 'rb') as file:
             unpickler = pickle._Unpickler(file)
             unpickler.encoding = 'latin1'
@@ -139,11 +140,10 @@ def train(epoch, curr_class, old_classes):
                 afile.write(str(correct_zero / total_zero))
                 afile.write("\n")
 
-    print("Trained for Previous Classes : {}".format(old_classes))
-
-    contents = dict()
+    print("Trained for Previous Classes : {}".format(old_classes))'''
 
     for batch_idx, (inputs, targets) in enumerate(trainloader):
+        contents = dict()
         inputs, targets = inputs.cpu().numpy(), targets.cpu().numpy()
         idx = np.where(targets == curr_class)
         inputs, targets = inputs[idx], targets[idx]
@@ -151,19 +151,38 @@ def train(epoch, curr_class, old_classes):
         inputs, targets = Variable(torch.from_numpy(inputs), requires_grad=False), Variable(torch.from_numpy(targets), requires_grad=False)
         inputs, targets = inputs.to(device), targets.to(device)
 
-        optimizer.zero_grad()
         activs, outputs, linact = net(inputs, old_class=False)
         activs = activs.data.cpu().numpy()
-        loss = criterion(outputs, targets)
+
+        contents['data'] = activs
+        contents['labels'] = np_targets
+
+        if(not os.isdir(filepath + str(curr_class))):
+            os.mkdir(filepath + str(curr_class))
+
+        with open(filepath + str(curr_class) + "/" + str(batch_idx) + ".pkl", "wb+") as file:
+            pickle.dump(contents, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+        for old_class in old_classes:
+            lent = len([name for name in os.listdir(filepath + str(old_classes)) if os.path.isfile(name)])
+            with open(filepath + str(old_class) + "/" + str(int(batch_idx / lent)) + ".pkl", 'rb') as file:
+                unpickler = pickle._Unpickler(file)
+                unpickler.encoding = 'latin1'
+                old_contents = unpickler.load()
+
+            X, Y = np.asarray(old_contents['data'], dtype=np.float32), np.asarray(old_contents['labels'])
+            activs = np.concatenate((activs, X))
+            np_targets = np.concatenate((np_targets, Y))
+
+        inputs, targets = Variable(torch.from_numpy(activs), requires_grad=False), Variable(torch.from_numpy(np_targets), requires_grad=False)
+        inputs, targets = inputs.to(device), targets.to(device)
+        optimizer.zero_grad()
+
+        outputs, linact = net(X, old_class=True)
+        linact = linact.data.cpu().numpy()
+        loss = criterion(outputs, Y)
         loss.backward()
         optimizer.step()
-
-        if('data' in contents.keys()):
-            contents['data'] = np.concatenate((contents['data'], activs))
-            contents['labels'] = np.concatenate((contents['labels'], np_targets))
-        else :
-            contents['data'] = activs
-            contents['labels'] = np_targets
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -177,9 +196,6 @@ def train(epoch, curr_class, old_classes):
             afile.write("{}\n".format(correct / total))
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-
-    with open(filepath + str(curr_class) + ".pkl", "wb+") as file:
-        pickle.dump(contents, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def test(epoch, old_classes_arr, curr_class):
